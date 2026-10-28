@@ -9,9 +9,9 @@ A password manager with a calm interface, one encrypted file and no accounts.
 [![License: MPL 2.0](https://img.shields.io/badge/license-MPL%202.0-8a4b2a?style=flat-square)](LICENSE)
 [![Platform: Windows and web](https://img.shields.io/badge/platform-Windows%2010%2F11%20%C2%B7%20web-3b2f25?style=flat-square)](#install)
 [![Encryption: Argon2id and AES-256-GCM](https://img.shields.io/badge/encryption-Argon2id%20%2B%20AES--256--GCM-d9a073?style=flat-square)](docs/THREAT-MODEL.md)
-[![Status: first release soon](https://img.shields.io/badge/status-first%20release%20soon-7a9a5a?style=flat-square)](#install)
+[![Release](https://img.shields.io/github/v/release/Tuftle/burrow?style=flat-square&color=8a4b2a)](https://github.com/Tuftle/burrow/releases/latest)
 
-[Website](https://tuftle.vercel.app/burrow) &ensp;◆&ensp; [Releases](https://github.com/Tuftle/burrow/releases) &ensp;◆&ensp; [Threat model](docs/THREAT-MODEL.md) &ensp;◆&ensp; [Building](#building)
+[Website](https://tuftle.vercel.app/burrow) &ensp;◆&ensp; [Download](https://github.com/Tuftle/burrow/releases/latest) &ensp;◆&ensp; [Threat model](docs/THREAT-MODEL.md) &ensp;◆&ensp; [Building](#building)
 
 </div>
 
@@ -39,12 +39,9 @@ exe, and built into [Wren](https://github.com/Tuftle/wren), all from the same co
 
 ## ◆ Install
 
-> **Burrow has not had its first release yet.** The steps below describe the files that the release will contain. Until
-> then you can run the web app or build the Windows files yourself, see [Building](#building).
-
 **Windows 10 and 11, 64-bit.**
 
-1. Download `Burrow-Setup.exe` from the [releases page](https://github.com/Tuftle/burrow/releases).
+1. Download `Burrow-Setup.exe` from the [latest release](https://github.com/Tuftle/burrow/releases/latest).
 2. Run it. It installs for the current user into `%LOCALAPPDATA%\Programs\Burrow`, so no administrator rights are needed,
    and adds a Start menu shortcut.
 3. Make a vault. Burrow shows a recovery key once, and asks you to confirm that you have saved it.
@@ -66,7 +63,7 @@ it, and it writes nothing anywhere else, so it can sit on a USB stick.
 </table>
 
 > The installer is not code-signed yet, so Windows SmartScreen may warn on first run. The SHA-256 of each release file
-> will be listed in the release notes.
+> is listed in the release notes.
 
 To remove Burrow, use Windows Settings, then Apps, or run `%LOCALAPPDATA%\Programs\Burrow\uninstall\Burrow-Uninstall.exe`.
 Your vault file is kept unless you choose to delete it.
