@@ -4,6 +4,8 @@ import { loadBlob, saveBlob } from "./store.js";
 import { detectAndParse, newOnly, exportCsv } from "./importers.js";
 import * as totp from "./totp.js";
 import { report, breached } from "./health.js";
+import { isDesktop, appVersion, installKind, installUpdate } from "./desktop.js";
+import { checkForUpdate } from "./update.js";
 
 const app = document.getElementById("app");
 const IDLE_MS = 5 * 60 * 1000;
@@ -41,12 +43,34 @@ function show(...nodes) {
 }
 
 let toastTimer;
-function toast(text) {
+function toast(text, ms = 2200) {
   document.querySelector(".toast")?.remove();
   const t = h("div", { class: "toast", role: "status" }, text);
   document.body.append(t);
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.remove(), 2200);
+  toastTimer = setTimeout(() => t.remove(), ms);
+}
+
+// ---- updates (the Windows app only) ----
+const UPD = "burrow.update";
+function updSettings() {
+  try { return { auto: true, last: 0, ...JSON.parse(localStorage.getItem(UPD) || "{}") }; } catch { return { auto: true, last: 0 }; }
+}
+function saveUpd(o) {
+  try { localStorage.setItem(UPD, JSON.stringify(o)); } catch { /* it just asks again next time */ }
+}
+
+// Once a day at most, and only for the installed app: is there a newer version? Silent unless there is.
+async function autoCheck() {
+  if (!isDesktop) return;
+  try {
+    const s = updSettings();
+    if (!s.auto || Date.now() - s.last < 20 * 3600e3) return;
+    if ((await installKind()) !== "installed") return;
+    const u = await checkForUpdate(await appVersion());
+    saveUpd({ ...updSettings(), last: Date.now() });
+    if (u.available) toast(`burrow ${u.version} is out. open tools to update.`, 7000);
+  } catch { /* offline, or the file is not there: say nothing */ }
 }
 
 let clipTimer;
@@ -277,6 +301,7 @@ function openVault() {
   armIdle();
   render();
   announce();
+  autoCheck();
   if (state.pending) {
     const p = state.pending;
     state.pending = null;
@@ -537,8 +562,49 @@ function toolsPane() {
         h("p", { class: "soft", style: "margin:4px 0 8px" }, "the encrypted backup is safe to keep anywhere. the csv is readable by anyone."),
         h("div", { class: "row" },
           h("button", { class: "btn ghost", onclick: backup }, "encrypted backup"),
-          h("button", { class: "btn danger", onclick: exportPlain }, "plain csv")))),
+          h("button", { class: "btn danger", onclick: exportPlain }, "plain csv"))),
+      isDesktop && updatesBlock()),
     msg, out);
+}
+
+function updatesBlock() {
+  const info = h("p", { class: "soft", style: "margin:4px 0 8px" }, "looking at this copy");
+  const result = h("div", { class: "stack" });
+  let kind = "other";
+  Promise.all([appVersion(), installKind()]).then(([v, k]) => {
+    kind = k;
+    info.textContent = `burrow ${v}, ${k === "installed" ? "installed" : k === "portable" ? "portable" : "run from a folder"}.`;
+  });
+  const auto = h("input", { type: "checkbox", checked: updSettings().auto, onchange: (e) => saveUpd({ ...updSettings(), auto: e.target.checked }) });
+  const install = async (u) => {
+    result.replaceChildren(h("p", { class: "soft" }, "downloading and checking it, then burrow restarts"));
+    try { await installUpdate(u.url, u.sha256); } catch (err) { result.replaceChildren(h("p", { class: "warn" }, String(err))); }
+  };
+  const check = async () => {
+    result.replaceChildren(h("p", { class: "soft" }, "checking"));
+    try {
+      const u = await checkForUpdate(await appVersion());
+      saveUpd({ ...updSettings(), last: Date.now() });
+      if (!u.available) return result.replaceChildren(h("p", { class: "soft" }, "you have the latest version."));
+      const link = u.portableUrl || u.url;
+      result.replaceChildren(
+        h("p", {}, `burrow ${u.version} is out.`),
+        u.notes && h("p", { class: "soft", style: "margin:0" }, u.notes),
+        kind === "installed"
+          ? h("button", { class: "btn", onclick: () => install(u) }, "update and restart")
+          : h("div", {}, h("p", { class: "soft", style: "margin:0 0 6px" }, "this copy cannot update itself. download the new file from:"),
+              h("div", { class: "row" }, h("code", { style: "word-break:break-all;flex:1" }, link),
+                h("button", { class: "btn ghost", onclick: () => copy(link, "link") }, "copy"))));
+    } catch (err) {
+      result.replaceChildren(h("p", { class: "warn" }, "could not check: " + err.message));
+    }
+  };
+  return h("div", {}, h("b", {}, "updates"), info,
+    h("div", { class: "row" },
+      h("button", { class: "btn ghost", onclick: check }, "check for updates"),
+      h("label", { style: "margin:0;color:var(--text);display:flex;gap:6px;align-items:center" }, auto, "check once a day")),
+    h("p", { class: "soft", style: "font-size:.8rem;margin:8px 0" }, "asks tuftle.vercel.app for one small file. nothing about you is sent."),
+    result);
 }
 
 function startEdit(id, prefill = null) {

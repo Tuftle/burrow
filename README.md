@@ -25,7 +25,8 @@ A password manager with a calm interface, one encrypted file and no accounts.
 
 Burrow keeps your logins in a single file that only your master password can open. Everything is encrypted on your own
 computer, so there is no server to trust and nothing to sign up for. It runs on the web, as a Windows app, as a portable
-exe, and built into [Wren](https://github.com/Tuftle/wren), all from the same code and the same vault format.
+exe, as a Firefox and Chrome extension, and built into [Wren](https://github.com/Tuftle/wren), all from the same code and
+the same vault format.
 
 | | |
 | :-- | :-- |
@@ -69,6 +70,9 @@ To remove Burrow, use Windows Settings, then Apps, or run `%LOCALAPPDATA%\Progra
 Your vault file is kept unless you choose to delete it.
 
 **In Wren**, Burrow is already built in. Press `Alt+Shift+V` to open it.
+
+**In Firefox and Chrome**, there is an extension that fills logins the same way. It is built and tested, but it is not in
+the add-on stores yet, so for now you load it yourself. See [docs/EXTENSION.md](docs/EXTENSION.md).
 
 ---
 
@@ -116,7 +120,7 @@ Your vault file is kept unless you choose to delete it.
 </td>
 <td width="50%" valign="top">
 
-**In Wren**
+**In Wren and browsers**
 
 - ✦ A small chip offers the login for the page you are on
 - ✦ It only appears for that exact site, over https
@@ -149,15 +153,26 @@ that already has malware running as you.
 
 ## ◆ Privacy
 
-Burrow sends no telemetry, has no accounts and does not check for updates by itself yet. One feature can contact a server,
-and only when you press its button.
+Burrow sends no telemetry and has no accounts. Two features contact a server. The second only runs when you press a
+button.
 
 | What | When | What is sent |
 | :-- | :-- | :-- |
+| **Update check** | Once a day, in the installed Windows app only. It can be turned off in **tools** | Nothing about you. Burrow fetches one small public file, [`latest.json`](https://tuftle.vercel.app/burrow/latest.json), and compares version numbers. No cookies, no referrer. |
 | **Breach check** | Only when you press **check for breaches** and confirm | The first five characters of a SHA-1 fingerprint of each password, to `api.pwnedpasswords.com`. Never a password, and never a site name. |
 
 The vault, the recovery key and your master password never leave the device. The web app keeps the vault in the browser's
 own storage, the Windows app in `%APPDATA%\Burrow\vault.json`, and the portable exe in its `burrow-data` folder.
+
+---
+
+## ◆ Updates
+
+The installed Windows app looks for a newer version once a day and says so once. **Tools** then offers **update and
+restart**. The download only comes from Burrow's own [GitHub releases](https://github.com/Tuftle/burrow/releases), and it
+is checked against the SHA-256 announced with it before anything runs. The installer waits for Burrow to close, replaces the
+program files, keeps your vault and opens Burrow again. A portable exe cannot replace itself, so it shows the link instead.
+The browser extension is updated by the browser.
 
 ---
 
@@ -173,11 +188,14 @@ burrow/
 │   ├── health.js       weak, reused and breached passwords
 │   ├── match.js        which logins belong to which page
 │   ├── store.js        where the vault is kept (browser or file)
+│   ├── update.js       is there a newer burrow? (the feed is checked hard)
+│   ├── desktop.js      what only the Windows app can do
 │   └── vendor/         Argon2id (hash-wasm, WebAssembly)
-├── desktop/        Tauri shell for Windows that embeds web/
+├── desktop/        Tauri shell for Windows that embeds web/, and installs updates
 ├── installer/      Burrow-Setup.exe, an egui window, no NSIS
-├── tests/          38 tests, run with node
-├── tools/          logo drawing, copying web/ into Wren
+├── extension/      the Firefox and Chrome extension: background, content script, manifests
+├── tests/          51 tests, run with node
+├── tools/          logo drawing, building the extension, copying web/ into Wren
 └── docs/           threat model, Wren notes, screenshots
 ```
 
@@ -206,6 +224,14 @@ cd desktop   && cargo build --release --features custom-protocol
 cd ../installer && cargo build --release && python make.py
 ```
 
+Build the browser extension (Firefox needs Manifest V2, Chrome V3, so there are two):
+
+```
+python tools/build-extension.py
+```
+
+It writes `extension/dist/Burrow-Firefox.zip` and `Burrow-Chrome.zip`, next to unpacked folders you can load directly.
+
 `make.py` writes `Burrow-Setup.exe`, `Burrow-Portable.exe` and `SHA256SUMS.txt` to the folder you give it. The installer
 carries `burrow.exe` on its end. Every installer screen can be previewed with `burrow-setup.exe --preview-installing=0.5`,
 `--preview-done` or `--preview-removed`, with `--light` or `--dark`.
@@ -220,7 +246,7 @@ How the Wren side works is in [docs/WREN.md](docs/WREN.md).
   the encrypted backup, or keep the vault file in a folder you already sync yourself.
 - Code signing, so SmartScreen will stop warning.
 - macOS and Linux builds.
-- Update checks inside the Windows app.
+- Listing the extension in the Firefox and Chrome stores.
 
 ---
 

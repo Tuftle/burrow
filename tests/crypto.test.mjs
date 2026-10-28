@@ -90,14 +90,31 @@ test("same password gives a different auth key per vault, and it is stable on un
   assert.deepEqual(again.authKey, a.authKey);
 });
 
-test("argon2id matches a known answer vector", async () => {
-  // RFC 9106 style check through hash-wasm directly, so a bad vendor copy shows up
+test("argon2id matches the reference implementation's published vector", async () => {
+  // from the Argon2 reference test suite:
+  // $argon2id$v=19$m=65536,t=2,p=1$c29tZXNhbHQ$CTFhFdXPJO1aFaMaO6Mm5c8y7cJHAph8ArZWb2GRPPc
   const out = await globalThis.hashwasm.argon2id({
     password: "password",
-    salt: new TextEncoder().encode("somesaltsomesalt"),
-    parallelism: 1, iterations: 1, memorySize: 8, hashLength: 16, outputType: "hex",
+    salt: "somesalt",
+    parallelism: 1, iterations: 2, memorySize: 65536, hashLength: 32, outputType: "hex",
   });
-  assert.equal(out.length, 32);
+  assert.equal(out, "09316115d5cf24ed5a15a31a3ba326e5cf32edc24702987c02b6566f61913cf7");
+  assert.equal(out, Buffer.from("CTFhFdXPJO1aFaMaO6Mm5c8y7cJHAph8ArZWb2GRPPc", "base64").toString("hex"));
+});
+
+test("the vendored argon2 file is the one from the pinned npm package", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const vendored = await readFile(new URL("../web/vendor/argon2.js", import.meta.url));
+  const original = await readFile(new URL("../node_modules/hash-wasm/dist/argon2.umd.min.js", import.meta.url));
+  assert.ok(vendored.equals(original));
+});
+
+test("the vault's own key derivation gives the same key for the same inputs, and different for others", async () => {
+  const a = await v.createVault("pw", data, FAST);
+  const b = await v.unlock(a.blob, "pw");
+  assert.deepEqual(b.authKey, a.authKey);
+  const c = await v.changePassword(a.blob, a.session, "pw", FAST); // new salt
+  assert.notDeepEqual(c.authKey, a.authKey);
 });
 
 test("default parameters work and take a sensible time", async () => {

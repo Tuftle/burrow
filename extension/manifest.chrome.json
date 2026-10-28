@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Burrow",
+  "version": "__VERSION__",
+  "description": "A quiet password manager. Your logins live in one encrypted file, with no accounts.",
+  "minimum_chrome_version": "110",
+  "icons": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" },
+  "action": { "default_title": "burrow", "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" } },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["storage", "alarms", "clipboardWrite"],
+  "content_scripts": [
+    { "matches": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"], "js": ["content.js"], "run_at": "document_idle", "all_frames": false }
+  ],
+  "content_security_policy": { "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'" },
+  "commands": {
+    "open": { "suggested_key": { "default": "Alt+Shift+V" }, "description": "Open burrow" },
+    "fill": { "suggested_key": { "default": "Alt+Shift+L" }, "description": "Fill this page's login" }
+  }
+}

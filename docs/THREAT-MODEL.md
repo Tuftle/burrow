@@ -18,7 +18,9 @@ Your master password is stretched with Argon2id (64 MiB, 3 passes) into a key. T
 | A password lingering on the clipboard | Cleared after 20 seconds. |
 | Walking away from an open vault | Locks after five quiet minutes, or at once with the lock button or `ctrl+l`. In Wren the open logins are also dropped after ten quiet minutes, and the panic key closes everything. |
 | The breach check leaking a password | Only the first five characters of a SHA-1 fingerprint are sent, and only if you turn it on. |
-| Tracking | There is no server, no account, no analytics and no network call except the breach check you asked for. |
+| A tampered update | The installed app only downloads from Burrow's own GitHub releases, and checks the SHA-256 that was announced with the update before running anything. A wrong checksum or a foreign address is refused and the download thrown away. |
+| Logins left in a browser | In the extension they live in `storage.session`: memory only, never written to disk, gone when the browser closes, and not readable by content scripts. |
+| Tracking | There is no server, no account and no analytics. The only network calls are the breach check you ask for, and in the installed Windows app a once-a-day look for a newer version (one public file, nothing about you, and it can be turned off). |
 
 ## What it does not protect against
 
@@ -29,11 +31,20 @@ Your master password is stretched with Argon2id (64 MiB, 3 passes) into a key. T
 - **Memory inspection while unlocked.** While open, the decrypted entries exist in memory. Locking drops them, but JavaScript cannot guarantee that every copy is wiped immediately.
 - **Phishing that you click through.** Matching is strict, so a look-alike site gets no login from burrow. That is a useful warning, but it is not a defence if you then type the password by hand.
 
+## Updates, honestly
+
+The update check trusts two things: the HTTPS address `tuftle.vercel.app/burrow/latest.json`, and Burrow's GitHub releases.
+The checksum in the file proves that the download is the one that was announced, but the installer is not code-signed yet,
+so there is no second, independent signature. Someone who controlled both the website and the GitHub account could announce
+a bad update. Code signing is planned, and it closes that gap.
+
 ## Choices that deserve a second look
 
 - Argon2id comes from the vendored `hash-wasm` build (4.11.0, WebAssembly). It is the one piece of crypto that is not the browser's own WebCrypto.
 - The entry-level fields (`site`, `url`) are inside the encrypted blob. The blob's size reveals roughly how many entries you have.
 - The recovery key is 160 bits, shown as base32. It is derived with HKDF, not Argon2, because it is already random.
+- The browser extension runs on every `https://` page so that it can show the chip. It only ever reads the page's own address
+  and the login form, and it hands a login to a page only after a real click on its own chip.
 - The portable and desktop builds keep the vault in a plain file. File permissions are those of your user account.
 
 ## Reporting a problem
