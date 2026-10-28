@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Burrow",
+  "version": "0.1.0",
+  "identifier": "me.tuftle.burrow",
+  "build": { "frontendDist": "../web" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      { "title": "burrow", "width": 1000, "height": 680, "minWidth": 420, "minHeight": 520, "center": true }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": false, "icon": ["icons/icon.ico"] }
+}
