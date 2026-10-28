@@ -71,8 +71,9 @@ Your vault file is kept unless you choose to delete it.
 
 **In Wren**, Burrow is already built in. Press `Alt+Shift+V` to open it.
 
-**In Firefox and Chrome**, there is an extension that fills logins the same way. It is built and tested, but it is not in
-the add-on stores yet, so for now you load it yourself. See [docs/EXTENSION.md](docs/EXTENSION.md).
+**In Firefox and Chrome**, there is an extension that fills logins the same way. Download `Burrow-Firefox.zip` or
+`Burrow-Chrome.zip` from the [latest release](https://github.com/Tuftle/burrow/releases/latest). It is not in the add-on
+stores yet, so you load it yourself. See [docs/EXTENSION.md](docs/EXTENSION.md).
 
 ---
 

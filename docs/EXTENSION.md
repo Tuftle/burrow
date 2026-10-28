@@ -17,12 +17,15 @@ python tools/build-extension.py
 
 ## Try it
 
+Download `Burrow-Firefox.zip` or `Burrow-Chrome.zip` from the [latest release](https://github.com/Tuftle/burrow/releases/latest),
+or build them yourself as above.
+
 **Firefox:** open `about:debugging`, choose **This Firefox**, then **Load Temporary Add-on**, and pick `manifest.json` in
-`extension-firefox`. Temporary add-ons are removed when Firefox closes. Firefox only keeps an add-on for good when it is
+`extension-firefox` (or choose the zip itself). Temporary add-ons are removed when Firefox closes. Firefox only keeps an add-on for good when it is
 signed by Mozilla, which means listing it on addons.mozilla.org.
 
 **Chrome and Edge:** open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and pick
-`extension-chrome`.
+`extension-chrome`, or the folder you got by unzipping `Burrow-Chrome.zip`.
 
 Click the toolbar button, or press `Alt+Shift+V`, to open Burrow. Make a vault, or restore a backup. Then open a login page:
 a small chip offers the login for that site. `Alt+Shift+L` fills it without the chip. After you sign in somewhere new, Burrow
