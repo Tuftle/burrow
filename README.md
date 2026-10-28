@@ -1,62 +1,253 @@
-# burrow
+<div align="center">
 
-A quiet password manager from [tuftle](https://tuftle.vercel.app). Your logins live in one scrambled file that only your master password can open. There are no accounts, no telemetry and no server in the way.
+<img src="docs/images/burrow-icon.png" width="112" alt="Burrow">
 
-It runs three ways, from the same code and the same vault format:
+# Burrow
 
-| Where | What | Vault is kept |
-| --- | --- | --- |
-| The web | `web/`, plain HTML and JavaScript, no framework | in the browser (IndexedDB) |
-| Windows app | `desktop/`, a small Tauri window around the same page | in `%APPDATA%\Burrow\vault.json` |
-| Windows, portable | the same exe, renamed so its name contains `portable` | in a `burrow-data` folder next to the exe |
-| Wren | built into the browser, `alt+shift+v` | in the extension's storage |
+A password manager with a calm interface, one encrypted file and no accounts.
 
-## What it does
+[![License: MPL 2.0](https://img.shields.io/badge/license-MPL%202.0-8a4b2a?style=flat-square)](LICENSE)
+[![Platform: Windows and web](https://img.shields.io/badge/platform-Windows%2010%2F11%20%C2%B7%20web-3b2f25?style=flat-square)](#install)
+[![Encryption: Argon2id and AES-256-GCM](https://img.shields.io/badge/encryption-Argon2id%20%2B%20AES--256--GCM-d9a073?style=flat-square)](docs/THREAT-MODEL.md)
+[![Status: first release soon](https://img.shields.io/badge/status-first%20release%20soon-7a9a5a?style=flat-square)](#install)
 
-- Encrypts on your computer with Argon2id and AES-256-GCM. A wrong password and a damaged file are both refused.
-- A recovery key, shown once when you make the vault. There is no reset: lose the password and the key, and the vault is gone.
-- Entries with site, web address, username, password, notes and an optional one-time code secret.
-- A generator for random characters or plain-word passphrases (256 words, 8 bits each).
-- One-time codes (RFC 6238), with a countdown.
-- A checkup for weak and reused passwords. An opt-in breach check sends only the first five characters of a SHA-1 fingerprint to haveibeenpwned.com.
-- Import from Chrome, Edge and Firefox (CSV) and Bitwarden (JSON). Export an encrypted backup, or a plain CSV behind a warning.
-- Auto-lock after five quiet minutes, `ctrl+l` to lock, `ctrl+k` to search, clipboard cleared after 20 seconds.
-- In Wren: a small chip fills the login for the page you are on, and offers to save new ones. See [docs/WREN.md](docs/WREN.md).
+[Website](https://tuftle.vercel.app/burrow) &ensp;◆&ensp; [Releases](https://github.com/Tuftle/burrow/releases) &ensp;◆&ensp; [Threat model](docs/THREAT-MODEL.md) &ensp;◆&ensp; [Building](#building)
 
-## Layout
+</div>
+
+<br>
+
+![The vault](docs/images/vault.png)
+
+<br>
+
+## ◆ Overview
+
+Burrow keeps your logins in a single file that only your master password can open. Everything is encrypted on your own
+computer, so there is no server to trust and nothing to sign up for. It runs on the web, as a Windows app, as a portable
+exe, and built into [Wren](https://github.com/Tuftle/wren), all from the same code and the same vault format.
+
+| | |
+| :-- | :-- |
+| **Interface** | The tuftle palette: warm cream and brown, serif type, lowercase wording. Light and dark follow the system. |
+| **Vault** | One encrypted file. Argon2id turns the master password into a key, AES-256-GCM protects the contents. |
+| **Privacy** | No account, no sync service, no telemetry. The only network call is a breach check that you start yourself. |
+| **Recovery** | A recovery key is shown once, when the vault is made. There is no reset and no back door. |
+| **Import** | Logins from Chrome, Edge and Firefox (CSV) and Bitwarden (JSON). |
+
+---
+
+## ◆ Install
+
+> **Burrow has not had its first release yet.** The steps below describe the files that the release will contain. Until
+> then you can run the web app or build the Windows files yourself, see [Building](#building).
+
+**Windows 10 and 11, 64-bit.**
+
+1. Download `Burrow-Setup.exe` from the [releases page](https://github.com/Tuftle/burrow/releases).
+2. Run it. It installs for the current user into `%LOCALAPPDATA%\Programs\Burrow`, so no administrator rights are needed,
+   and adds a Start menu shortcut.
+3. Make a vault. Burrow shows a recovery key once, and asks you to confirm that you have saved it.
+
+Prefer a single file? `Burrow-Portable.exe` is the same app. Its vault and settings live in a `burrow-data` folder next to
+it, and it writes nothing anywhere else, so it can sit on a USB stick.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/images/installer-welcome.png" alt="Installer, welcome"></td>
+<td width="33%"><img src="docs/images/installer-walk.png" alt="Installer, installing"></td>
+<td width="33%"><img src="docs/images/installer-ready.png" alt="Installer, ready"></td>
+</tr>
+<tr>
+<td align="center"><sub>Welcome</sub></td>
+<td align="center"><sub>An acorn finds its burrow</sub></td>
+<td align="center"><sub>Ready</sub></td>
+</tr>
+</table>
+
+> The installer is not code-signed yet, so Windows SmartScreen may warn on first run. The SHA-256 of each release file
+> will be listed in the release notes.
+
+To remove Burrow, use Windows Settings, then Apps, or run `%LOCALAPPDATA%\Programs\Burrow\uninstall\Burrow-Uninstall.exe`.
+Your vault file is kept unless you choose to delete it.
+
+**In Wren**, Burrow is already built in. Press `Alt+Shift+V` to open it.
+
+---
+
+## ◆ What is in it
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Vault**
+
+- ✦ Encrypted with Argon2id (64 MiB) and AES-256-GCM
+- ✦ A changed or damaged file is refused, never half opened
+- ✦ Recovery key, and a new master password without re-encrypting entries
+- ✦ Locks after five quiet minutes, or at once with `Ctrl+L`
+- ✦ Copied passwords are cleared after 20 seconds
+- ✦ Encrypted backup and restore
+
+</td>
+<td width="50%" valign="top">
+
+**Passwords**
+
+- ✦ Random characters, or a passphrase of plain words
+- ✦ Seven words is about 56 bits and easy to remember
+- ✦ One-time codes with a countdown
+- ✦ Notes and a web address for every login
+- ✦ Search from anywhere with `Ctrl+K`
+- ✦ Strength hint while you choose a master password
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Checkup**
+
+- ✦ Lists weak passwords and passwords used twice
+- ✦ Runs on your computer and shows nothing to anyone
+- ✦ Optional breach check, started by you
+- ✦ Import from Chrome, Edge, Firefox and Bitwarden
+- ✦ Export an encrypted backup, or a plain CSV behind a warning
+- ✦ Imports skip logins you already have
+
+</td>
+<td width="50%" valign="top">
+
+**In Wren**
+
+- ✦ A small chip offers the login for the page you are on
+- ✦ It only appears for that exact site, over https
+- ✦ Nothing is filled until you click it
+- ✦ "Save this login?" after you sign in somewhere new
+- ✦ `Alt+Shift+V` opens Burrow, `Alt+Shift+L` fills the page
+- ✦ The panic key closes Wren and drops every open login
+
+</td>
+</tr>
+</table>
+
+<br>
+
+![The password generator](docs/images/generator.png)
+
+---
+
+## ◆ How it protects you
+
+Burrow stretches your master password with Argon2id into a key. That key unwraps a random data key, and the data key
+encrypts the vault. The recovery key unwraps a second copy of the same data key, so changing the master password only
+rewraps one key.
+
+What it protects against, and what it does not, is written down in the [threat model](docs/THREAT-MODEL.md). The short
+version: a stolen vault file is only as strong as your master password, and no password manager can help on a computer
+that already has malware running as you.
+
+---
+
+## ◆ Privacy
+
+Burrow sends no telemetry, has no accounts and does not check for updates by itself yet. One feature can contact a server,
+and only when you press its button.
+
+| What | When | What is sent |
+| :-- | :-- | :-- |
+| **Breach check** | Only when you press **check for breaches** and confirm | The first five characters of a SHA-1 fingerprint of each password, to `api.pwnedpasswords.com`. Never a password, and never a site name. |
+
+The vault, the recovery key and your master password never leave the device. The web app keeps the vault in the browser's
+own storage, the Windows app in `%APPDATA%\Burrow\vault.json`, and the portable exe in its `burrow-data` folder.
+
+---
+
+## ◆ Repository layout
 
 ```
-web/         the app (index.html, app.js, crypto.js, generator.js, importers.js, totp.js, health.js, match.js, store.js, host.js)
-tests/       node --test, 38 tests
-desktop/     Tauri shell (Rust) that embeds web/ and keeps the vault in a file
-installer/   Burrow-Setup.exe: a small egui window, no NSIS. make.py joins it with the app
-tools/       sync-to-wren.py copies web/ into the Wren source tree
-docs/        THREAT-MODEL.md, WREN.md
+burrow/
+├── web/            the app: plain HTML and JavaScript, no framework
+│   ├── crypto.js       vault encryption, keys, recovery
+│   ├── generator.js    passwords and passphrases (words.js is the word list)
+│   ├── importers.js    Chrome, Edge, Firefox and Bitwarden files, CSV export
+│   ├── totp.js         one-time codes
+│   ├── health.js       weak, reused and breached passwords
+│   ├── match.js        which logins belong to which page
+│   ├── store.js        where the vault is kept (browser or file)
+│   └── vendor/         Argon2id (hash-wasm, WebAssembly)
+├── desktop/        Tauri shell for Windows that embeds web/
+├── installer/      Burrow-Setup.exe, an egui window, no NSIS
+├── tests/          38 tests, run with node
+├── tools/          logo drawing, copying web/ into Wren
+└── docs/           threat model, Wren notes, screenshots
 ```
 
-## Run it
+---
 
-```bash
+## ◆ Building
+
+You need Node 20 or newer. For the Windows files you also need Rust and the Visual Studio build tools.
+
+```
 npm install
-npm test                       # 38 tests, no browser needed
-cd web && python -m http.server 8731   # then open http://localhost:8731
+npm test
 ```
 
-Build the Windows files (needs Rust and the Visual Studio build tools):
+Run the web app on its own:
 
-```bash
+```
+cd web
+python -m http.server 8731
+```
+
+Build the Windows app, the installer and the portable exe:
+
+```
 cd desktop   && cargo build --release --features custom-protocol
 cd ../installer && cargo build --release && python make.py
 ```
 
-`make.py` writes `Burrow-Setup.exe`, `Burrow-Portable.exe` and `SHA256SUMS.txt` to `I:\Documents\code\burrow-release`. The installer carries `burrow.exe` on its end, puts it in `%LOCALAPPDATA%\Programs\Burrow`, adds the shortcuts and an entry in Windows' list of apps, and takes it all away again with `--uninstall`. Previews of every screen: `burrow-setup.exe --preview-installing=0.5`, `--preview-done`, `--preview-removed`, with `--light` or `--dark`.
+`make.py` writes `Burrow-Setup.exe`, `Burrow-Portable.exe` and `SHA256SUMS.txt` to the folder you give it. The installer
+carries `burrow.exe` on its end. Every installer screen can be previewed with `burrow-setup.exe --preview-installing=0.5`,
+`--preview-done` or `--preview-removed`, with `--light` or `--dark`.
 
-## Not done yet
+How the Wren side works is in [docs/WREN.md](docs/WREN.md).
 
-- Sync between computers. Planned as an optional encrypted blob on a private store, with no accounts. For now, copy the encrypted backup, or keep the vault file in a folder you already sync.
-- Code signing, so Windows SmartScreen will warn on first run.
+---
+
+## ◆ Not done yet
+
+- Sync between computers. It is planned as an optional encrypted blob on a private store, with no accounts. For now, copy
+  the encrypted backup, or keep the vault file in a folder you already sync yourself.
+- Code signing, so SmartScreen will stop warning.
 - macOS and Linux builds.
+- Update checks inside the Windows app.
 
-## Licence
+---
 
-Not chosen yet. MPL 2.0, like Wren, is the likely pick.
+## ◆ Related
+
+| | |
+| :-- | :-- |
+| **[wren](https://github.com/Tuftle/wren)** | The browser that has Burrow built in. |
+| **[nook](https://github.com/Tuftle/nook)** | The search engine Wren uses by default. |
+| **[tuftle](https://github.com/Tuftle/tuftle)** | The website, with the Burrow page. |
+
+---
+
+## ◆ Licence
+
+Burrow is released under the [Mozilla Public License 2.0](LICENSE), the same licence as Wren. The Argon2id build in
+`web/vendor` is [hash-wasm](https://github.com/Daninet/hash-wasm), which is MIT licensed.
+
+<div align="center">
+
+<br>
+
+◆ &ensp; ◆ &ensp; ◆
+
+<sub>Made by <a href="https://github.com/Tuftle">tuftle</a></sub>
+
+</div>
